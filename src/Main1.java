@@ -1,5 +1,4 @@
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+
 void main() {
     //Вариант 24
     int N = 5, M = 6, k = 4, b = -3, A = -10, B = 10;
@@ -19,7 +18,6 @@ void main() {
     task4(N);
 
 }
-
 
 
 // 1. Вывести на экран таблицу умножения размером N × N, где на пересечении
