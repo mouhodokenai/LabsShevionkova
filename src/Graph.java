@@ -110,6 +110,102 @@ public class Graph {
         return result;
     }
 
+    // МЕТОДЫ ДЛЯ BFS
+
+    /**
+     * Поиск в ширину (BFS) от заданной вершины.
+     * @param start     стартовая вершина (1..n)
+     * @param distances массив размером n+1, заполняется расстояниями (для недостижимых останется -1)
+     * @param order     список для записи порядка обхода (порядок добавления в очередь)
+     */
+    public void bfs(int start, int[] distances, List<Integer> order) {
+        if (start < 1 || start > n) {
+            throw new IllegalArgumentException("Стартовая вершина вне диапазона 1.." + n);
+        }
+
+        boolean[] visited = new boolean[n + 1];
+        Queue<Integer> queue = new ArrayDeque<>();
+
+        visited[start] = true;
+        distances[start] = 0;
+        queue.offer(start);
+        order.add(start);
+
+        while (!queue.isEmpty()) {
+            int v = queue.poll();
+            for (int u = 1; u <= n; u++) {
+                if (adjMatrix[v][u] == 1 && !visited[u]) {
+                    visited[u] = true;
+                    distances[u] = distances[v] + 1;
+                    queue.offer(u);
+                    order.add(u);
+                }
+            }
+        }
+    }
+
+    /**
+     * Обход всего графа в ширину (от всех компонент связности).
+     * Выводит порядок обхода, расстояния от стартовой вершины каждой компоненты
+     * и общее количество компонент.
+     */
+    public void bfsAllComponents() {
+        boolean[] visited = new boolean[n + 1];
+        int[] distances = new int[n + 1];
+        Arrays.fill(distances, -1); // -1 означает "недостижимо"
+
+        int components = 0;
+        List<Integer> globalOrder = new ArrayList<>();
+
+        for (int v = 1; v <= n; v++) {
+            if (!visited[v]) {
+                components++;
+                List<Integer> componentOrder = new ArrayList<>();
+                bfsWithVisited(v, visited, distances, componentOrder);
+                System.out.println("Компонента " + components + " (старт = " + v + "):");
+                System.out.println("  Порядок обхода: " + componentOrder);
+                System.out.println("  Расстояния от " + v + ":");
+                for (int u : componentOrder) {
+                    System.out.println("    до " + u + " = " + distances[u]);
+                }
+                globalOrder.addAll(componentOrder);
+            }
+        }
+
+        System.out.println("\nОбщий порядок обхода (по компонентам): " + globalOrder);
+        System.out.println("Количество компонент связности: " + components);
+        if (components == 1) {
+            System.out.println("Граф связный.");
+        } else {
+            System.out.println("Граф несвязный.");
+        }
+    }
+
+    /**
+     * Вспомогательный BFS, использующий общий массив visited.
+     * Заполняет distances и order для одной компоненты.
+     */
+    private void bfsWithVisited(int start, boolean[] visited, int[] distances, List<Integer> order) {
+        Queue<Integer> queue = new ArrayDeque<>();
+        visited[start] = true;
+        distances[start] = 0;
+        queue.offer(start);
+        order.add(start);
+
+        while (!queue.isEmpty()) {
+            int v = queue.poll();
+            for (int u = 1; u <= n; u++) {
+                if (adjMatrix[v][u] == 1 && !visited[u]) {
+                    visited[u] = true;
+                    distances[u] = distances[v] + 1;
+                    queue.offer(u);
+                    order.add(u);
+                }
+            }
+        }
+    }
+
+
     // МЕТОДЫ ДЛЯ DFS
 
     /**
@@ -245,7 +341,7 @@ public class Graph {
         System.out.println();
     }
 
-    // Старые вспомогательные методы (оставляем)
+    // Старые вспомогательные методы
     static void printNumbers1(int n) {
         if (n == 0) return;
         System.out.print(n + " ");
@@ -341,6 +437,20 @@ public class Graph {
         int n = 6;
         Graph graph = new Graph(n, edges);
 
+        int[] dist = new int[n + 1];
+        Arrays.fill(dist, -1);
+        List<Integer> order = new ArrayList<>();
+        graph.bfs(1, dist, order);
+        System.out.println("BFS от 1: " + order);
+        System.out.println("Расстояния:");
+        for (int i = 1; i <= n; i++) {
+            System.out.println("  до " + i + " = " + dist[i]);
+        }
+
+        System.out.println("\nОбход всех компонент");
+        graph.bfsAllComponents();
+
+        /*
         System.out.println("Рекурсивный DFS (старт = 1) ");
         boolean[] visitedRec = new boolean[n + 1];
         Arrays.fill(visitedRec, true);
@@ -377,7 +487,7 @@ public class Graph {
             System.out.println("Граф несвязный");
         }
 
-        /*
+
 
         // 1. Матрица смежности
         int[][] adj = graph.getAdjacencyMatrix();
