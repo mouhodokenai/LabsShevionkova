@@ -3,32 +3,32 @@ import java.util.*;
 
 
 public class Graph {
-    private final int n; // количество вершин (вершины нумеруются от 1 до n)
+    private final int n;                      // количество вершин (1..n)
+    private final List<int[]> edgeList;       // список рёбер
+    private final int[][] adjMatrix;          // матрица смежности (добавлено поле)
 
-    private final List<int[]> edgeList; // список рёбер (каждое ребро - массив [u, v])
-
-    public Graph(int n, List<int[]> edgeList) { // Конструктор графа, n - количество вершин, edgeList - список ребер
+    // Конструктор – теперь сразу строит матрицу смежности
+    public Graph(int n, List<int[]> edgeList) {
         this.n = n;
         this.edgeList = edgeList;
-    }
-
-    // 1. Матрица смежности
-    public int[][] getAdjacencyMatrix() { // метод для формирования матрицы смежности
-        int[][] adj = new int[n + 1][n + 1]; // создание квадратной матрицы размером (n+1) × (n+1), индексы от 1 до n
+        this.adjMatrix = new int[n + 1][n + 1];
         for (int[] edge : edgeList) {
             int u = edge[0];
             int v = edge[1];
-            adj[u][v] = 1;
-            adj[v][u] = 1;
+            adjMatrix[u][v] = 1;
+            adjMatrix[v][u] = 1;
         }
-        return adj;
+    }
+
+    // 1. Матрица смежности – возвращает готовую матрицу (поле)
+    public int[][] getAdjacencyMatrix() {
+        return adjMatrix;
     }
 
     // 2. Матрица инциденций
-    // Рёбра нумеруются в том же порядке, что и в edgeList (от 0 до m-1)
-    public int[][] getIncidenceMatrix() { // метод для формирования матрицы инциденций
-        int m = edgeList.size(); // функция для определения длины списка, так определяем количество ребер
-        int[][] inc = new int[n + 1][m]; // строки 1..n, столбцы 0..m-1
+    public int[][] getIncidenceMatrix() {
+        int m = edgeList.size();
+        int[][] inc = new int[n + 1][m];
         for (int j = 0; j < m; j++) {
             int u = edgeList.get(j)[0];
             int v = edgeList.get(j)[1];
@@ -39,96 +39,166 @@ public class Graph {
     }
 
     // 3. Списки связей (смежности)
-    public List<Integer>[] getAdjacencyLists() { // метод для формирования списка связей, метод возвращает массив списков (список номеров смежных вершин)
-        List<Integer>[] adjLists = new List[n + 1]; //создание пустого массива размером n+1
+    public List<Integer>[] getAdjacencyLists() {
+        List<Integer>[] adjLists = new List[n + 1];
         for (int i = 1; i <= n; i++) {
-            adjLists[i] = new ArrayList<>(); // инициализируем каждый элемент массива пустым списком, для каждой вершины свой список
+            adjLists[i] = new ArrayList<>();
         }
-        // создаем списки смежности
         for (int[] edge : edgeList) {
             int u = edge[0];
             int v = edge[1];
             adjLists[u].add(v);
             adjLists[v].add(u);
         }
-        // Для удобства отсортируем каждый список по возрастанию
         for (int i = 1; i <= n; i++) {
             Collections.sort(adjLists[i]);
         }
         return adjLists;
     }
-    // 4. Перечень рёбер (возвращаем исходный список)
-    public List<int[]> getEdgeList() { // метод для возвращения исходного списка
+
+    // 4. Перечень рёбер
+    public List<int[]> getEdgeList() {
         return edgeList;
     }
+
     // 5. Степени вершин
-    public int[] getDegrees() { // Метод определения степеней вершин
-        int[] deg = new int[n + 1]; //Создаем нулевой массив размером n + 1
-        for (int[] edge : edgeList) { // Для каждого ребра увеличиваем счётчик степени для обеих вершин на 1
+    public int[] getDegrees() {
+        int[] deg = new int[n + 1];
+        for (int[] edge : edgeList) {
             deg[edge[0]]++;
             deg[edge[1]]++;
         }
         return deg;
     }
+
     // 6. Проверка на полноту
-    public boolean isComplete() { // Метод проверки на полноту
-        int totalEdges = edgeList.size(); // получение количества ребер
-        // В полном графе число рёбер = n*(n-1)/2
-        if (totalEdges != n * (n - 1) / 2) {
-            return false;
-        }
-        // Можно также проверить, что нет изолированных вершин и степени равны n-1
-        int[] deg = getDegrees(); // Проверяем, что степень каждой вершины равна n1. Если хоть одна не совпадает – граф не полный.
+    public boolean isComplete() {
+        int totalEdges = edgeList.size();
+        if (totalEdges != n * (n - 1) / 2) return false;
+        int[] deg = getDegrees();
         for (int i = 1; i <= n; i++) {
-            if (deg[i] != n - 1) {
-                return false;
-            }
+            if (deg[i] != n - 1) return false;
         }
-        return true; // все проверки пройдены, граф полный
+        return true;
     }
+
     // 7. Вершины с максимальной степенью
     public List<Integer> getVerticesWithMaxDegree() {
         int[] deg = getDegrees();
         int maxDeg = 0;
         for (int i = 1; i <= n; i++) {
-            if (deg[i] > maxDeg) {
-                maxDeg = deg[i];
-            }
+            if (deg[i] > maxDeg) maxDeg = deg[i];
         }
         List<Integer> result = new ArrayList<>();
         for (int i = 1; i <= n; i++) {
-            if (deg[i] == maxDeg) {
-                result.add(i);
-            }
+            if (deg[i] == maxDeg) result.add(i);
         }
         return result;
     }
+
     // 8. Вершины с минимальной степенью
     public List<Integer> getVerticesWithMinDegree() {
         int[] deg = getDegrees();
         int minDeg = Integer.MAX_VALUE;
-
         for (int j : deg) {
-            if (j < minDeg) {
-                minDeg = j;
-            }
+            if (j < minDeg) minDeg = j;
         }
-
         List<Integer> result = new ArrayList<>();
-
-        // Collect all vertices with that minimum degree
         for (int i = 0; i < deg.length; i++) {
-            if (deg[i] == minDeg) {
-                result.add(i);
-            }
+            if (deg[i] == minDeg) result.add(i);
         }
-
         return result;
     }
 
-    // Вспомогательные методы для вывода
-    private static void printMatrix(int[][] matrix, int n) { // Метод печати квадратной матрицы (матрица смежности)
-        System.out.println("Матрица смежности" + ":");
+    // МЕТОДЫ ДЛЯ DFS
+
+    /**
+     * Рекурсивный обход в глубину.
+     * @param v          текущая вершина
+     * @param visited    массив отметок (true – не посещена, false – посещена)
+     * @param order      список для записи порядка обхода
+     * @param treeEdges  список для записи древесных рёбер (в формате "(u,v)")
+     */
+    public void dfsRecursive(int v, boolean[] visited,
+                             List<Integer> order, List<String> treeEdges) {
+        visited[v] = false;          // помечаем как посещённую
+        order.add(v);
+        for (int u = 1; u <= n; u++) {
+            if (adjMatrix[v][u] == 1 && visited[u]) {
+                treeEdges.add("(" + v + "," + u + ")");
+                dfsRecursive(u, visited, order, treeEdges);
+            }
+        }
+    }
+
+    /**
+     * Нерекурсивный обход в глубину с явным стеком (массив + указатель).
+     * @param start      стартовая вершина
+     * @param visited    массив отметок (true – не посещена, false – посещена)
+     * @param order      список для записи порядка обхода
+     * @param treeEdges  список для записи древесных рёбер
+     */
+    public void dfsIterative(int start, boolean[] visited,
+                             List<Integer> order, List<String> treeEdges) {
+        int[] stack = new int[n + 1];
+        int top = 0;
+
+        // Помещаем стартовую вершину
+        top++;
+        stack[top] = start;
+        visited[start] = false;
+        order.add(start);
+
+        while (top != 0) {
+            int t = stack[top];          // текущая вершина на вершине стека
+            int j = 1;
+            boolean found = false;
+
+            // Ищем первого непосещённого соседа
+            while (!found && j <= n) {
+                if (adjMatrix[t][j] == 1 && visited[j]) {
+                    found = true;
+                } else {
+                    j++;
+                }
+            }
+
+            if (found) {
+                // Нашли нового соседа – идём вглубь
+                top++;
+                stack[top] = j;
+                visited[j] = false;
+                order.add(j);
+                treeEdges.add("(" + t + "," + j + ")");
+            } else {
+                // Нет непосещённых соседей – возвращаемся
+                top--;
+            }
+        }
+    }
+
+    /**
+     * Подсчёт количества компонент связности (использует рекурсивный DFS).
+     * @return количество компонент
+     */
+    public int countComponents() {
+        boolean[] visited = new boolean[n + 1];
+        Arrays.fill(visited, true);
+        int components = 0;
+        for (int v = 1; v <= n; v++) {
+            if (visited[v]) {
+                components++;
+                List<Integer> order = new ArrayList<>();
+                List<String> edges = new ArrayList<>();
+                dfsRecursive(v, visited, order, edges);
+                System.out.println("  Компонента " + components + ": " + order);
+            }
+        }
+        return components;
+    }
+
+    private static void printMatrix(int[][] matrix, int n) {
+        System.out.println("Матрица смежности:");
         for (int i = 1; i <= n; i++) {
             for (int j = 1; j <= n; j++) {
                 System.out.printf("%3d ", matrix[i][j]);
@@ -137,9 +207,9 @@ public class Graph {
         }
         System.out.println();
     }
-    private static void printIncidenceMatrix(int[][] inc, int n, int m)
-    { // Метод печати матрицы инциденций
-        System.out.println("Матрица инциденций" + ":");
+
+    private static void printIncidenceMatrix(int[][] inc, int n, int m) {
+        System.out.println("Матрица инциденций:");
         System.out.print(" ");
         for (int j = 0; j < m; j++) {
             System.out.printf("e%02d ", j + 1);
@@ -154,7 +224,8 @@ public class Graph {
         }
         System.out.println();
     }
-    private static void printAdjacencyLists(List<Integer>[] lists, int n) { // метод печати списков смежности
+
+    private static void printAdjacencyLists(List<Integer>[] lists, int n) {
         System.out.println("Списки связей (смежности):");
         for (int i = 1; i <= n; i++) {
             System.out.print(i + " -> ");
@@ -165,7 +236,8 @@ public class Graph {
         }
         System.out.println();
     }
-    private static void printEdgeList(List<int[]> edges) { // метод печати перечня ребер (исходный список)
+
+    private static void printEdgeList(List<int[]> edges) {
         System.out.println("Перечень рёбер:");
         for (int[] e : edges) {
             System.out.println("(" + e[0] + ", " + e[1] + ")");
@@ -173,11 +245,85 @@ public class Graph {
         System.out.println();
     }
 
-    // Главный метод
+    // Старые вспомогательные методы (оставляем)
+    static void printNumbers1(int n) {
+        if (n == 0) return;
+        System.out.print(n + " ");
+        printNumbers1(n - 1);
+    }
+
+    static void printNumbers2(int n) {
+        if (n == 0) return;
+        printNumbers2(n - 1);
+        System.out.print(n + " ");
+    }
+
+    static int sum(int[] arr, int n) {
+        if (n == 0) return 0;
+        return arr[n - 1] + sum(arr, n - 1);
+    }
+
+    static void printUnvisited(boolean[] visited) {
+        System.out.print("Непосещённые вершины: ");
+        boolean hasUnvisited = false;
+        for (int i = 1; i < visited.length; i++) {
+            if (!visited[i]) {
+                System.out.print(i + " ");
+                hasUnvisited = true;
+            }
+        }
+        if (!hasUnvisited) {
+            System.out.print("все вершины посещены");
+        }
+        System.out.println();
+    }
+
+    static int findFirstNeighbor(int v, boolean[] visited, int[][] A) {
+        for (int u = 1; u < A.length; u++) {
+            if (A[v][u] == 1 && !visited[u]) {
+                return u;
+            }
+        }
+        return -1;
+    }
+
+    //Главный метод
     static void main() {
+
+
+
+        /*
+        int[][] A = {
+                {0, 0, 0, 0, 0},
+                {0, 0, 1, 1, 1},
+                {0, 1, 0, 0, 1},
+                {0, 1, 0, 0, 1},
+                {0, 1, 1, 1, 0}
+        };
+
+        boolean[] visited = new boolean[6];
+
+        System.out.println(findFirstNeighbor(1, visited, A));
+
+
+        visited[2] = true;
+        visited[4] = true;
+
+        printUnvisited(visited);
+        */
+
+        //System.out.println(sum(new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, 8));
+
+        //printNumbers1(5);
+        //printNumbers2(5);
+
         //вариант 24
         //количество ребер - 10
         //количество вершин - 6
+
+
+
+
 
         List<int[]> edges = Arrays.asList(
                 new int[]{1, 5},
@@ -194,6 +340,44 @@ public class Graph {
 
         int n = 6;
         Graph graph = new Graph(n, edges);
+
+        System.out.println("Рекурсивный DFS (старт = 1) ");
+        boolean[] visitedRec = new boolean[n + 1];
+        Arrays.fill(visitedRec, true);
+        List<Integer> orderRec = new ArrayList<>();
+        List<String> edgesRec = new ArrayList<>();
+        graph.dfsRecursive(1, visitedRec, orderRec, edgesRec);
+        System.out.println("Порядок обхода: " + orderRec);
+        System.out.println("Древесные рёбра: " + edgesRec);
+
+        System.out.println("\nНерекурсивный DFS (старт = 1) ");
+        boolean[] visitedIter = new boolean[n + 1];
+        Arrays.fill(visitedIter, true);
+        List<Integer> orderIter = new ArrayList<>();
+        List<String> edgesIter = new ArrayList<>();
+        graph.dfsIterative(1, visitedIter, orderIter, edgesIter);
+        System.out.println("Порядок обхода: " + orderIter);
+        System.out.println("Древесные рёбра: " + edgesIter);
+
+        // Сравнение
+        System.out.println("\n Сравнение ");
+        if (orderRec.equals(orderIter) && edgesRec.equals(edgesIter)) {
+            System.out.println("Результаты совпадают");
+        } else {
+            System.out.println("Результаты различаются");
+        }
+
+        // Компоненты связности
+        System.out.println("\nКомпоненты связности");
+        int compCount = graph.countComponents();
+        System.out.println("Количество компонент: " + compCount);
+        if (compCount == 1) {
+            System.out.println("Граф связный");
+        } else {
+            System.out.println("Граф несвязный");
+        }
+
+        /*
 
         // 1. Матрица смежности
         int[][] adj = graph.getAdjacencyMatrix();
@@ -239,5 +423,8 @@ public class Graph {
             System.out.print(v + " ");
         }
         System.out.println();
+
+
+ */
     }
 }

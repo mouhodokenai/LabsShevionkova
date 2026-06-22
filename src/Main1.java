@@ -133,7 +133,6 @@ void task4(int N) {
         left++;
     }
 
-
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
             System.out.printf("%3d", matrix[i][j]);
